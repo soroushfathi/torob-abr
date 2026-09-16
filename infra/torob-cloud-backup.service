@@ -1,0 +1,8 @@
+[Unit]
+Description=Torob Cloud database logical backup
+After=docker.service
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/torob-cloud/backup.py
+UMask=0077
+Nice=10

@@ -1,0 +1,9 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.runtime/
+coverage/
+__pycache__/
+*.pyc
+public/fonts/*.woff2

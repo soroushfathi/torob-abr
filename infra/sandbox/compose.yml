@@ -1,0 +1,16 @@
+name: torob-cloud-sandbox
+services:
+  sample:
+    image: nginx:1.28-alpine
+    ports:
+      - "127.0.0.1:3180:80"
+    volumes:
+      - ./index.html:/usr/share/nginx/html/index.html:ro
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+    mem_limit: 64m
+    cpus: 0.25
+    security_opt:
+      - no-new-privileges:true

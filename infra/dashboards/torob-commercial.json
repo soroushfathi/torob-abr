@@ -1,0 +1,153 @@
+{
+  "uid": "torob-commercial",
+  "title": "Torob Cloud \u00b7 Commercial",
+  "schemaVersion": 39,
+  "version": 1,
+  "tags": [
+    "torob-cloud",
+    "local-development"
+  ],
+  "editable": false,
+  "timezone": "browser",
+  "refresh": "15s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "source",
+        "label": "Activity source",
+        "type": "custom",
+        "query": "user,verification",
+        "current": {
+          "text": "user",
+          "value": "user"
+        },
+        "options": [
+          {
+            "text": "user",
+            "value": "user",
+            "selected": true
+          },
+          {
+            "text": "verification",
+            "value": "verification",
+            "selected": false
+          }
+        ]
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Qualified referrals by provider",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_commercial_qualified_referrals_30d{job=\"torob-cloud\",source=\"$source\"}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    },
+    {
+      "id": 2,
+      "title": "Provider click-through rate",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_ctr_clicked_30d{job=\"torob-cloud\",source=\"$source\"}/torob_ctr_compared_30d{job=\"torob-cloud\",source=\"$source\"}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": "Unique projects with comparison and provider click / unique projects with comparison in the rolling 30-day event window. Not purchase conversion."
+    },
+    {
+      "id": 3,
+      "title": "Verified conversions \u00b7 NOT CONNECTED",
+      "type": "text",
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 8,
+        "h": 5
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "No attribution integration or transaction source. Outbound provider clicks are **referrals**, never purchases."
+      }
+    },
+    {
+      "id": 4,
+      "title": "Attributed revenue \u00b7 NOT CONNECTED",
+      "type": "text",
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 8,
+        "h": 5
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "No transaction data or revenue attribution integration. Displayed as unavailable, never a fabricated zero."
+      }
+    }
+  ]
+}

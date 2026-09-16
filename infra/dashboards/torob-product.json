@@ -1,0 +1,645 @@
+{
+  "uid": "torob-product",
+  "title": "Torob Cloud \u00b7 Product funnel",
+  "schemaVersion": 39,
+  "version": 1,
+  "tags": [
+    "torob-cloud",
+    "local-development"
+  ],
+  "editable": false,
+  "timezone": "browser",
+  "refresh": "15s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "source",
+        "label": "Activity source",
+        "type": "custom",
+        "query": "user,verification",
+        "current": {
+          "text": "user",
+          "value": "user"
+        },
+        "options": [
+          {
+            "text": "user",
+            "value": "user",
+            "selected": true
+          },
+          {
+            "text": "verification",
+            "value": "verification",
+            "selected": false
+          }
+        ]
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Version 1 \u00b7 fixed rolling 30 days",
+      "type": "text",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 5
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "One project = one intake cohort. Events deduplicated by project + event + provider. Source **user** excludes verification traffic. Primary KPI: eligible evidence-backed recommendation \u2192 selected plan \u2192 click within 7 days of completion. New cohorts are provisional until the attribution window matures. Dashboard time picker does not change these SQL rolling windows."
+      }
+    },
+    {
+      "id": 2,
+      "title": "Intakes started",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(torob_events_30d{job=\"torob-cloud\",source=\"$source\",event=\"intake_started\"}) or (0 * max(torob_analytics_db_up{job=\"torob-cloud\"} == 1))",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    },
+    {
+      "id": 3,
+      "title": "Intakes completed",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(torob_events_30d{job=\"torob-cloud\",source=\"$source\",event=\"intake_completed\"}) or (0 * max(torob_analytics_db_up{job=\"torob-cloud\"} == 1))",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    },
+    {
+      "id": 4,
+      "title": "Eligible evidence-backed recommendations",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(torob_events_30d{job=\"torob-cloud\",source=\"$source\",event=\"recommendation_succeeded\"}) or (0 * max(torob_analytics_db_up{job=\"torob-cloud\"} == 1))",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    },
+    {
+      "id": 5,
+      "title": "Intakes with no confirmed eligible option",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 5,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(torob_events_30d{job=\"torob-cloud\",source=\"$source\",event=\"no_eligible_option\"}) or (0 * max(torob_analytics_db_up{job=\"torob-cloud\"} == 1))",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    },
+    {
+      "id": 6,
+      "title": "Comparisons viewed",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 5,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(torob_events_30d{job=\"torob-cloud\",source=\"$source\",event=\"comparison_viewed\"}) or (0 * max(torob_analytics_db_up{job=\"torob-cloud\"} == 1))",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    },
+    {
+      "id": 7,
+      "title": "Plan selections (including provisional)",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(torob_events_30d{job=\"torob-cloud\",source=\"$source\",event=\"plan_selected\"}) or (0 * max(torob_analytics_db_up{job=\"torob-cloud\"} == 1))",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    },
+    {
+      "id": 8,
+      "title": "Checklists viewed",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 10,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(torob_events_30d{job=\"torob-cloud\",source=\"$source\",event=\"checklist_viewed\"}) or (0 * max(torob_analytics_db_up{job=\"torob-cloud\"} == 1))",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    },
+    {
+      "id": 9,
+      "title": "Provider clicks (not purchases)",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 10,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(torob_events_30d{job=\"torob-cloud\",source=\"$source\",event=\"provider_clicked\"}) or (0 * max(torob_analytics_db_up{job=\"torob-cloud\"} == 1))",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    },
+    {
+      "id": 10,
+      "title": "Useful feedback",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 15,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(torob_events_30d{job=\"torob-cloud\",source=\"$source\",event=\"feedback_useful\"}) or (0 * max(torob_analytics_db_up{job=\"torob-cloud\"} == 1))",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    },
+    {
+      "id": 11,
+      "title": "Not useful feedback",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 15,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(torob_events_30d{job=\"torob-cloud\",source=\"$source\",event=\"feedback_not_useful\"}) or (0 * max(torob_analytics_db_up{job=\"torob-cloud\"} == 1))",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    },
+    {
+      "id": 12,
+      "title": "Successful recommendation rate",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 15,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_funnel_recommended_30d{job=\"torob-cloud\",source=\"$source\"}/torob_funnel_completed_30d{job=\"torob-cloud\",source=\"$source\"}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    },
+    {
+      "id": 13,
+      "title": "No confirmed eligible option rate",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum(torob_events_30d{job=\"torob-cloud\",source=\"$source\",event=\"no_eligible_option\"}) or (0 * max(torob_analytics_db_up{job=\"torob-cloud\"} == 1)))/torob_funnel_completed_30d{job=\"torob-cloud\",source=\"$source\"}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    },
+    {
+      "id": 14,
+      "title": "Primary KPI \u00b7 mature successful referral share",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 20,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_funnel_mature_referrals_30d{job=\"torob-cloud\",source=\"$source\"}/torob_funnel_mature_completed_30d{job=\"torob-cloud\",source=\"$source\"}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": "No mature cohort means no data, never 0% success."
+    },
+    {
+      "id": 15,
+      "title": "Provisional successful referral share",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 20,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_funnel_successful_referrals_30d{job=\"torob-cloud\",source=\"$source\"}/torob_funnel_completed_30d{job=\"torob-cloud\",source=\"$source\"}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    },
+    {
+      "id": 16,
+      "title": "Median intake \u2192 first eligible recommendation",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 25,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_funnel_median_recommendation_seconds_30d{job=\"torob-cloud\",source=\"$source\"}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    }
+  ]
+}

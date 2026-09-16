@@ -1,0 +1,285 @@
+{
+  "uid": "torob-quality",
+  "title": "Torob Cloud \u00b7 Recommendation quality",
+  "schemaVersion": 39,
+  "version": 1,
+  "tags": [
+    "torob-cloud",
+    "local-development"
+  ],
+  "editable": false,
+  "timezone": "browser",
+  "refresh": "15s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "source",
+        "label": "Activity source",
+        "type": "custom",
+        "query": "user,verification",
+        "current": {
+          "text": "user",
+          "value": "user"
+        },
+        "options": [
+          {
+            "text": "user",
+            "value": "user",
+            "selected": true
+          },
+          {
+            "text": "verification",
+            "value": "verification",
+            "selected": false
+          }
+        ]
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Recommendations evaluated",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_quality_evaluated_30d{job=\"torob-cloud\",source=\"$source\"}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    },
+    {
+      "id": 2,
+      "title": "Require critical verification share",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_quality_requires_verification_30d{job=\"torob-cloud\",source=\"$source\"}/torob_quality_evaluated_30d{job=\"torob-cloud\",source=\"$source\"}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    },
+    {
+      "id": 3,
+      "title": "Complete cost estimates share",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_quality_complete_estimates_30d{job=\"torob-cloud\",source=\"$source\"}/torob_quality_evaluated_30d{job=\"torob-cloud\",source=\"$source\"}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    },
+    {
+      "id": 4,
+      "title": "Catalog freshness",
+      "type": "text",
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 8,
+        "h": 5
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "Snapshot: **2026-09-16**, stale after 7 days. Three official provider sources; dynamic prices and procurement availability require verification. No option is labeled eligible while critical data is unknown."
+      }
+    },
+    {
+      "id": 5,
+      "title": "Oldest evaluated catalog snapshot age",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 5,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_catalog_oldest_snapshot_age_seconds_30d{job=\"torob-cloud\",source=\"$source\"}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    },
+    {
+      "id": 6,
+      "title": "Missing critical spec / price share",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 5,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_catalog_missing_critical_30d{job=\"torob-cloud\",source=\"$source\"}/torob_catalog_offers_evaluated_30d{job=\"torob-cloud\",source=\"$source\"}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": "Missing compute price, CPU or RAM in persisted evaluated options. This bounded definition does not claim full specification coverage."
+    },
+    {
+      "id": 7,
+      "title": "Hard-constraint violation rate",
+      "type": "text",
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 8,
+        "h": 5
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "Not measured by an independent labeled evaluator yet. Selection of known ineligible options is blocked, but enforcement tests are not a measured production quality rate."
+      }
+    },
+    {
+      "id": 8,
+      "title": "AI extraction & corrected assumptions",
+      "type": "text",
+      "gridPos": {
+        "x": 8,
+        "y": 10,
+        "w": 8,
+        "h": 5
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "Not connected: labeled AI extraction evaluation and tracking of changed recommendations after corrected assumptions. No accuracy percentage is fabricated."
+      }
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+[Unit]
+Description=Daily Torob Cloud backup (7 copies)
+[Timer]
+OnCalendar=*-*-* 02:30:00 UTC
+Persistent=true
+RandomizedDelaySec=300
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,23 @@
+[Unit]
+Description=Torob Cloud private telemetry and read-only analytics
+After=network-online.target docker.service
+Wants=network-online.target
+[Service]
+User=torob-cloud
+Group=torob-cloud
+ExecStart=/opt/torob-cloud/venv/bin/python /opt/torob-cloud/gateway.py
+Restart=on-failure
+RestartSec=10
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/torob-cloud/state
+RestrictAddressFamilies=AF_INET AF_UNIX
+CapabilityBoundingSet=
+MemoryMax=160M
+CPUQuota=15%
+TasksMax=32
+UMask=0077
+[Install]
+WantedBy=multi-user.target

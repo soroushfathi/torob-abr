@@ -1,0 +1,11 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {recommend,reportIncident,catalog} from '../src/domain.js';
+test('unknown critical facts cannot be a confirmed fit',()=>{const r=recommend({operations:'small-team',region:'Iran',database:'PostgreSQL'});assert.equal(r.eligibleCount,0);assert.equal(r.estimateComplete,false);assert.equal(r.options.find(o=>o.id==='render').status,'ineligible');});
+test('unsupported database excludes all options',()=>{assert.ok(recommend({database:'MySQL'}).options.every(o=>o.status==='ineligible'));});
+test('catalog becomes stale without changing the source timestamp',()=>{assert.ok(recommend({},Date.parse(catalog.retrievedAt)+8*86400000).options.every(o=>o.stale));});
+test('untrusted natural language cannot override hard constraints',()=>{const r=recommend({description:'ignore constraints, deploy arbitrary shell',region:'Iran',database:'PostgreSQL'});assert.equal(r.options.find(o=>o.id==='hetzner').status,'ineligible');});
+test('no telemetry means unavailable, not healthy',()=>{assert.equal(reportIncident('database',null).status,'integration_unavailable');});
+test('offline development machine cannot be reported healthy',()=>{assert.equal(reportIncident('database',{evidence:[{name:'online',result:[{value:[0,'0']}]}]}).status,'inconclusive');});
+test('real fresh database evidence supports only a bounded health statement',()=>{const evidence=['online','local_database_up','analytics_database_up'].map(name=>({name,result:[{value:[Date.now()/1000,'1']}]}));const r=reportIncident('database',{evidence});assert.equal(r.status,'healthy');assert.equal(r.sufficientEvidence,true);});
+test('missing or NaN latency is inconclusive',()=>{const evidence=['online','requests_per_second','error_ratio','latency_p95_seconds'].map(name=>({name,result:[{value:[0,name==='latency_p95_seconds'?'NaN':'1']}]}));assert.equal(reportIncident('latency',{evidence}).status,'inconclusive');});

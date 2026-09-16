@@ -1,0 +1,207 @@
+{
+  "uid": "torob-sre",
+  "title": "Torob Cloud \u00b7 SRE & deployment",
+  "schemaVersion": 39,
+  "version": 1,
+  "tags": [
+    "torob-cloud",
+    "local-development"
+  ],
+  "editable": false,
+  "timezone": "browser",
+  "refresh": "15s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "source",
+        "label": "Activity source",
+        "type": "custom",
+        "query": "user,verification",
+        "current": {
+          "text": "user",
+          "value": "user"
+        },
+        "options": [
+          {
+            "text": "user",
+            "value": "user",
+            "selected": true
+          },
+          {
+            "text": "verification",
+            "value": "verification",
+            "selected": false
+          }
+        ]
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Read-only investigations",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_sre_investigations_30d{job=\"torob-cloud\",source=\"$source\"}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    },
+    {
+      "id": 2,
+      "title": "Investigations with sufficient evidence share",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_sre_sufficient_evidence_30d{job=\"torob-cloud\",source=\"$source\"}/torob_sre_investigations_30d{job=\"torob-cloud\",source=\"$source\"}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    },
+    {
+      "id": 3,
+      "title": "Inconclusive investigation share",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_sre_inconclusive_30d{job=\"torob-cloud\",source=\"$source\"}/torob_sre_investigations_30d{job=\"torob-cloud\",source=\"$source\"}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "noValue": "No data / unavailable"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": ""
+    },
+    {
+      "id": 4,
+      "title": "Deployment and readiness \u00b7 NOT EXECUTED",
+      "type": "text",
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 8,
+        "h": 5
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "Local sandbox artifacts are available. No Docker runtime detected on the development machine. Deployment success, verified readiness latency and rollback success have no observations."
+      }
+    },
+    {
+      "id": 5,
+      "title": "Remediation & diagnosis \u00b7 NOT MEASURED",
+      "type": "text",
+      "gridPos": {
+        "x": 8,
+        "y": 5,
+        "w": 8,
+        "h": 5
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "No approved remediation or labeled fault scenarios were executed. Accepted proposals, correct diagnosis and recovery verification rates are unavailable. No faults were injected into shared services."
+      }
+    },
+    {
+      "id": 6,
+      "title": "Alert \u2192 report latency \u00b7 NOT CONNECTED",
+      "type": "text",
+      "gridPos": {
+        "x": 16,
+        "y": 5,
+        "w": 8,
+        "h": 5
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "Authenticated alert ingestion is not implemented in this initial integration. Manual investigations have real Prometheus evidence. No production MTTR improvement claim."
+      }
+    }
+  ]
+}
