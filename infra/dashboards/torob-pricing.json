@@ -1,0 +1,242 @@
+{
+  "uid": "torob-pricing",
+  "title": "Torob Cloud / Pricing collection",
+  "schemaVersion": 39,
+  "version": 1,
+  "tags": [
+    "torob-cloud"
+  ],
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Availability",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_pricing_metrics_available{job=\"torob-cloud\"}",
+          "legendFormat": "{{provider}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "Unavailable"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "title": "Source data age (metadata for Arvan)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_pricing_catalog_age_seconds{job=\"torob-cloud\"}",
+          "legendFormat": "{{provider}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "Unavailable"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "title": "Published extractions / metadata",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_pricing_success_total{job=\"torob-cloud\"}",
+          "legendFormat": "{{provider}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "Unavailable"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "title": "Failures",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_pricing_failure_total{job=\"torob-cloud\"}",
+          "legendFormat": "{{provider}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "Unavailable"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "title": "Held suspicious changes",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_pricing_suspicious_total{job=\"torob-cloud\"}",
+          "legendFormat": "{{provider}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "Unavailable"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "title": "Last run duration",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_pricing_duration_seconds{job=\"torob-cloud\"}",
+          "legendFormat": "{{provider}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "Unavailable"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 7,
+      "title": "Extracted records (not sellable plans for metered)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_pricing_plan_count{job=\"torob-cloud\"}",
+          "legendFormat": "{{provider}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "Unavailable"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 8,
+      "title": "Enabled sources",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "foroushyar-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "torob_pricing_enabled{job=\"torob-cloud\"}",
+          "legendFormat": "{{provider}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "Unavailable"
+        },
+        "overrides": []
+      }
+    }
+  ],
+  "description": "Real collection only. Missing histories remain absent. Arvan age measures tariff metadata, never a newly verified unit price. URL, error text and run IDs are not metric labels."
+}

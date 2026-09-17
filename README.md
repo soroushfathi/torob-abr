@@ -17,7 +17,7 @@ npm run migrate
 npm start
 ```
 
-Open **http://127.0.0.1:3100**. Sign in using `LOCAL_ACCESS_TOKEN` from the private `.env` file. This is an isolated demo-session login: projects belong to the current cookie session (7 days). A new login creates a separate workspace; preserve the browser cookie to resume that session. This is not a production identity system.
+Open **http://127.0.0.1:3100**. Sign in using `LOCAL_ACCESS_TOKEN` from the private `.env` file. The header provides logout and admin/user mode switching. Enter `ADMIN_ACCESS_TOKEN` to elevate; switching back to user requires no key and removes admin access server-side. Switching mode preserves saved projects in the same session and reloads the page (unsaved form changes are lost). Logout expires the session server-side and clears the cookie. This is an isolated demo-session login: projects belong to the current cookie session (7 days). A new login creates a separate workspace and cannot access the previous session's projects; the logout dialog explains this limitation. This is not a production identity system. Apply migration `005_session_controls.sql` with `npm run migrate` before using these controls.
 
 The existing tunnel/application may already be running from setup. Do not start duplicate listeners; `ExitOnForwardFailure` will report conflicts. Closing the tunnel disconnects the database; closing the app marks the development machine offline after 90 seconds plus at most one scrape interval.
 
@@ -36,6 +36,12 @@ Use the existing Grafana administrator account. No existing password was changed
 
 Business dashboards default to `source=user`; choose `verification` to inspect the exercised integration journeys. These are real API requests and persisted events, explicitly separated from user activity. All business panels use rolling 30-day SQL windows, independent of the dashboard time picker. See [KPI definitions](docs/kpis.md).
 
+## Package advisor and pricing collection
+
+The advisor now produces one selected package and at most one meaningful alternative, with rule IDs, assumptions, explicit unknown costs and immutable report history. Pricing separates `fixed_plan`, `metered`, explicit configurations and exact-decimal estimates. Liara has an SSR adapter; Arvan uses public calculator metadata and explicit configuration quotes. Other providers are registered with unsupported automated extraction status.
+
+Sign in with the separate `ADMIN_ACCESS_TOKEN` in ignored `.env` for the pricing administration page. Ordinary sessions cannot call `/api/admin/*`. Restart the local app after the new environment settings are added. The bounded pricing worker runs independently on `xdo-new`, daily at 03:15 UTC; no application is deployed there. See [the package/pricing runbook](docs/pricing-packages.md) for rules, adapter coverage, limitations and installation details. Dashboard: http://127.0.0.1:13300/d/torob-pricing.
+
 ## What is implemented
 
 - Persian RTL local UI: requirements, conservative provider comparison, saved projects, provisional selection, procurement checklist, analytics and real read-only incident investigations.
@@ -44,23 +50,18 @@ Business dashboards default to `source=user`; choose `verification` to inspect t
 - Reproducible Grafana dashboards and scoped scrape job; offline handling; daily backups with a verified disposable restore.
 - Saved, hashed sandbox deployment plans and Compose artifacts. **No deployment/remediation executor is enabled.**
 
-## Verify
+## Validation policy
 
-```powershell
-npm test
-python scripts/remote.py infra/verify-server.py
-```
-
-**User preference: E2E testing is paused. Do not run `npm run verify` or browser journey tests unless requested again.** Earlier verification completed before this preference was supplied. The command is retained for future use: it creates an explicitly marked verification session/project, persists events and a plan, checks ownership/DDL restrictions, reconnects to verify persistence, and saves a real SRE report to ignored `.runtime/verification.json`. Allow 30 seconds for SQL aggregation and Prometheus scrapes to catch up. [Verification results](docs/verification.md) and [operations runbook](docs/operations.md) describe the completed checks and recovery procedure.
+**All tests are paused by the user: do not write or run unit, integration, E2E, browser journey tests or `npm run verify`.** Product acceptance belongs to the user. Earlier verification records are historical, not validation of this change. Essential syntax/configuration review and public provider source inspection remain allowed.
 
 Fonts are self-hosted IRANYekanX WOFF2 (Regular, Medium, DemiBold, Bold, ExtraBold) copied from the user-provided `D:\Projects\ForoushYar\IRANYekanX(Pro)` package. Font binaries are local/ignored; `scripts/setup-fonts.ps1` reproduces the copy. No external font CDN is used. English technical identifiers retain Latin numerals and code uses a monospace font.
 
 ## Current limits
 
-- This is the initial integration built from an empty repository, not completion of every feature in the original broad product brief. The advisor is a conservative rules fallback; live AI, AI accuracy evaluation, alert webhook ingestion, full pricing import automation, complete cost scenarios, and deployment/remediation execution are not implemented.
-- Three official provider sources were inspected on 2026-09-16: [Liara](https://liara.ir/pricing/), [Hetzner](https://www.hetzner.com/cloud/cost-optimized/) and [Render compute plans](https://render.com/docs/compute-plans). Dynamic/unknown prices remain unknown; Hetzner CX23 was shown unavailable. No complete eligible priced topology is claimed. Consequently the primary successful referral KPI is currently zero for completed test cohorts, and undefined for cohorts with no denominator. This is intentional honesty, not fabricated success.
+- This is the initial integration built from an empty repository, not completion of every feature in the original broad product brief. The advisor uses deterministic package rules; live AI, AI accuracy evaluation, alert webhook ingestion, full-market pricing adapters, fully verified cost scenarios, and deployment/remediation execution are not implemented.
+- The Iranian catalog contains 17 provider records and 21 priced plans/baskets from 5 providers, reviewed on 2026-09-16. Official prices, original currency, separate cost components, stock/starting-price distinctions, and source links are visible. Other providers retain explicit research status instead of invented prices. See [catalog sources and refresh procedure](docs/catalog.md). These are partial monthly costs, not final purchase quotes; capacity and unknown extras still require confirmation. No fully confirmed purchase eligibility is claimed.
 - AI uses no external credential. Sales conversions, attributed revenue, labeled diagnosis accuracy and production MTTR are unavailable. Existing Loki/Alloy were discovered; no Torob application-log integration is configured yet.
 - Local Docker is absent. `infra/sandbox/compose.yml` is a bounded reference artifact only. Its image has not been pulled or run here. The application cannot execute arbitrary shell or access a Docker socket.
-- Backups are currently on the same server, not off-site; host loss is not covered. There is only about 6 GB free server disk space. Existing PostgreSQL and observability are shared; the new namespaces/roles do not create resource-level fault isolation for the shared DB engine.
+- Backups are currently on the same server, not off-site; host loss is not covered. The last scoped inspection found about 9 GB free server disk space. Existing PostgreSQL and observability are shared; the new namespaces/roles do not create resource-level fault isolation for the shared DB engine.
 
 Public deployment is a separate future task requiring production authentication, HTTPS, a complete product acceptance review, and a reviewed execution plan.

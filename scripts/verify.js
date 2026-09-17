@@ -11,12 +11,12 @@ const created=await request('/api/projects',{name:'Verification · real persiste
 const recommendation=await request(`/api/projects/${id}/recommend`,{description:'Next.js rental application, PostgreSQL, Iran, small team',stack:'Next.js',database:'PostgreSQL',region:'Iran',operations:'small-team'});assert.equal(recommendation.status,200);assert.equal(recommendation.body.eligibleCount,0);ok('unknown prices never become confirmed eligible recommendations');
 assert.equal((await request(`/api/projects/${id}/select`,{id:'hetzner'})).status,409);ok('hard region constraint blocks selection');
 for(const name of ['comparison_viewed']) assert.equal((await request(`/api/projects/${id}/events`,{name})).status,200);
-assert.equal((await request(`/api/projects/${id}/select`,{id:'liara'})).status,200);
-for(const name of ['checklist_viewed','provider_clicked']) for(let i=0;i<2;i++)assert.equal((await request(`/api/projects/${id}/events`,{name,provider:'liara'})).status,200);
+assert.equal((await request(`/api/projects/${id}/select`,{id:'liara-paas-mars'})).status,200);
+for(const name of ['checklist_viewed','provider_clicked']) for(let i=0;i<2;i++)assert.equal((await request(`/api/projects/${id}/events`,{name,provider:'liara-paas-mars'})).status,200);
 const analytics=await request('/api/analytics');assert.equal(analytics.body.events.find(x=>x.name==='provider_clicked').count,1);assert.equal(analytics.body.conversions,null);ok('real product events persisted, deduplicated; conversions unavailable');
 assert.equal((await request(`/api/projects/${id}/plan`,{})).status,200);ok('versioned sandbox plan saved without execution');
 const second=await request('/api/session',{token:process.env.LOCAL_ACCESS_TOKEN,source:'verification'});
-assert.equal((await request(`/api/projects/${id}/select`,{id:'liara'},second.cookie)).status,404);ok('cross-session project ownership enforced');
+assert.equal((await request(`/api/projects/${id}/select`,{id:'liara-paas-mars'},second.cookie)).status,404);ok('cross-session project ownership enforced');
 const db=new pg.Client({connectionString:process.env.DATABASE_URL});await db.connect();
 assert.equal((await db.query('SELECT count(*)::int AS n FROM app.events WHERE project_id=$1',[id])).rows[0].n,7);
 try{await db.query('CREATE TABLE app.forbidden_test(id int)');assert.fail('App must not create tables');}catch(e){assert.equal(e.code,'42501');}ok('application DDL denied');

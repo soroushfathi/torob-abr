@@ -30,6 +30,7 @@ def validate(payload):
     if not any(s['name']=='torob_db_up' for s in samples): raise ValueError()
     return samples
 business={'lines':[], 'healthy':0, 'at':0}
+pricing={'lines':[], 'healthy':0}
 def metric(name,value,**labels):
     suffix='{'+','.join(k+'='+json.dumps(str(v)) for k,v in sorted(labels.items()))+'}' if labels else ''
     return f'{name}{suffix} {float(value)}'
@@ -51,6 +52,25 @@ def aggregate():
                 business.update(lines=lines,healthy=1,at=time.time())
         except Exception: business.update(lines=[],healthy=0,at=time.time())
         time.sleep(15)
+def aggregate_pricing():
+    while True:
+        try:
+            lines=[]
+            with psycopg.connect(host='127.0.0.1',port=5432,dbname='torob_cloud',user='torob_analytics',password=CONFIG['password'],connect_timeout=4,options='-c statement_timeout=4000') as conn:
+                with conn.cursor() as cur:
+                    cur.execute('SELECT * FROM pricing.metrics')
+                    fields=[c.name for c in cur.description]
+                    for row in cur:
+                        record=dict(zip(fields,row));provider=record.pop('provider');finished=record.pop('last_finished');valid=record.pop('last_valid')
+                        lines.append(metric('torob_pricing_enabled',record.pop('enabled'),provider=provider))
+                        if finished:
+                            lines.append(metric('torob_pricing_last_finished_seconds',finished.timestamp(),provider=provider))
+                            for name,value in record.items():
+                                if value is not None:lines.append(metric('torob_pricing_'+name,value,provider=provider))
+                        if valid:lines.append(metric('torob_pricing_catalog_age_seconds',max(0,time.time()-valid.timestamp()),provider=provider))
+            pricing.update(lines=lines,healthy=1)
+        except Exception:pricing.update(lines=[],healthy=0)
+        time.sleep(30)
 class Handler(BaseHTTPRequestHandler):
     def log_message(self,*args): pass # Never log tokens, payloads or raw request paths.
     def setup(self):
@@ -79,6 +99,8 @@ class Handler(BaseHTTPRequestHandler):
             lines=[metric('torob_dev_online',int(online)),metric('torob_telemetry_last_received_seconds',current['received']),metric('torob_analytics_db_up',business['healthy']),metric('torob_analytics_last_refresh_seconds',business['at']),metric('torob_conversion_integration_available',0),metric('torob_revenue_integration_available',0),metric('torob_ai_live_integration_available',0)]
             if online: lines.extend(metric(s['name'],s['value'],**s['labels']) for s in current['metrics'])
             lines.extend(business['lines'])
+            lines.append(metric('torob_pricing_metrics_available',pricing['healthy']))
+            lines.extend(pricing['lines'])
             return self.send(200,'\n'.join(lines)+'\n','text/plain; version=0.0.4')
         if self.server.server_address[1]!=19100 or not self.authorized(): return self.send(403,{'error':'forbidden'})
         kind=self.path.removeprefix('/evidence/')
@@ -98,5 +120,6 @@ class Handler(BaseHTTPRequestHandler):
         except Exception: self.send(503,{'error':'monitoring integration unavailable'})
 if __name__=='__main__':
     threading.Thread(target=aggregate,daemon=True).start()
+    threading.Thread(target=aggregate_pricing,daemon=True).start()
     threading.Thread(target=ThreadingHTTPServer((CONFIG['bridge'],19101),Handler).serve_forever,daemon=True).start()
     ThreadingHTTPServer(('127.0.0.1',19100),Handler).serve_forever()

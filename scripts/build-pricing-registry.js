@@ -1,0 +1,7 @@
+import {providers} from '../src/catalog.js';
+import {mkdir,writeFile} from 'node:fs/promises';
+const sources=providers.map(p=>({id:p.id,name:p.name,urls:[p.source],services:p.services.split(' · '),adapter:'unsupported',pricing_model:'unknown',parser_version:null,enabled:false,support_status:'استخراج خودکار پیاده‌سازی نشده؛ بررسی دستی قبلی به معنی adapter فعال نیست.'}));
+Object.assign(sources.find(p=>p.id==='liara'),{adapter:'liara',pricing_model:'fixed_plan',parser_version:'liara-ssr-1.0.0',enabled:true,services:['PaaS پایه','DBaaS پایه','IaaS','Object Storage مقدار نمایان'],support_status:'استخراج HTML رسمی؛ سطوح نقره‌ای/طلایی و سایر مقادیر slider پوشش داده نمی‌شوند.'});
+Object.assign(sources.find(p=>p.id==='arvan'),{adapter:'arvan',pricing_model:'metered',parser_version:'arvan-calculator-1.0.0',enabled:true,urls:['https://panel.arvancloud.ir/calculator','https://napi.arvancloud.ir/alak/v1/calculator-settings','https://napi.arvancloud.ir/chortke/v1/calculate-resources'],services:['IaaS','کانتینر','DevOps/پشتیبانی'],support_status:'API عمومی: استخراج روزانهٔ مشخصات تعرفه و محاسبهٔ پیکربندی صریح هنگام درخواست؛ جدول نرخ واحد قابل تعمیم و قابلیت سفارش تأیید نشده است.'});
+await mkdir('.runtime',{recursive:true});await writeFile('.runtime/pricing-sources.json',JSON.stringify(sources,null,2));
+console.log('Scoped provider registry generated; no source requests or product operations.');

@@ -3,6 +3,7 @@ node_modules/
 .env.*
 !.env.example
 .runtime/
+.local/
 coverage/
 __pycache__/
 *.pyc

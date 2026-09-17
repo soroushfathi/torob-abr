@@ -1,5 +1,7 @@
 # Private infrastructure runbook
 
+Current pricing support service, limited roles, daily schedule, evidence policy and scoped installation are documented in [pricing-packages.md](pricing-packages.md). All product tests, including historical verification commands below, are paused by the user. Do not execute them without explicit reauthorization.
+
 ## Boundary and discovered server
 
 All remote work uses the existing `ssh xdo-new` alias. The app stays on the Windows development machine. Server login is `deploy` with available non-interactive sudo; no host/user/key was invented. Do not expose this prototype publicly.

@@ -1,6 +1,6 @@
 # KPI dictionary v1
 
-Business source of truth: `app.events` and SQL views in PostgreSQL. The process counters only describe technical runtime observations. No personal/project/session IDs are exported as Prometheus labels. Bounded labels: event, provider (`liara`, `hetzner`, `render`), source (`user`, `verification`), job/service/environment, histogram bucket.
+Business source of truth: `app.events` and SQL views in PostgreSQL. The process counters only describe technical runtime observations. No personal/project/session IDs are exported as Prometheus labels. Bounded labels: event, provider (company IDs from the reviewed Iranian catalog; historical `hetzner`/`render` events are preserved), source (`user`, `verification`), job/service/environment, histogram bucket.
 
 | Measure | Definition / units / limits |
 |---|---|
