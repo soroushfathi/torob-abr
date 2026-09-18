@@ -16,7 +16,7 @@ for name,data in files.items():
 subprocess.run(['systemctl','start','torob-cloud-backup.service'],check=True,capture_output=True)
 if not list((root/'backups').glob('torob_cloud-*.dump')):raise RuntimeError('Torob database backup missing')
 # Preserve the old dedicated support files before writes.
-targets={'infra/pricing/worker.py':root/'pricing/worker.py','infra/pricing/adapters/liara.py':root/'pricing/adapters/liara.py','infra/pricing/adapters/arvan.py':root/'pricing/adapters/arvan.py','infra/torob-cloud-pricing.service':pathlib.Path('/etc/systemd/system/torob-cloud-pricing.service'),'infra/gateway.py':root/'gateway.py','infra/dashboards/torob-pricing.json':root/'dashboards/torob-pricing.json'}
+targets={'infra/pricing/worker.py':root/'pricing/worker.py','infra/pricing/adapters/liara.py':root/'pricing/adapters/liara.py','infra/pricing/adapters/arvan.py':root/'pricing/adapters/arvan.py','infra/pricing/adapters/parsvds.py':root/'pricing/adapters/parsvds.py','infra/torob-cloud-pricing.service':pathlib.Path('/etc/systemd/system/torob-cloud-pricing.service'),'infra/gateway.py':root/'gateway.py','infra/dashboards/torob-pricing.json':root/'dashboards/torob-pricing.json'}
 for name,target in targets.items():
     if target.exists():shutil.copy2(target,backup/name.replace('/','_'))
 secure=root/'secrets/credentials.json';credentials=json.loads(secure.read_text());shutil.copy2(secure,backup/'credentials.json')

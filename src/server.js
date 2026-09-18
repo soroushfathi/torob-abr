@@ -9,6 +9,7 @@ import {loadCatalog} from './pricing/catalog-store.js';
 import {registerPricingAdmin} from './pricing/admin.js';
 import {configurationFromRequirements,estimateArvan} from './pricing/arvan-estimate.js';
 import {attachMeteredPackage} from './advisor/metered-package.js';
+import {findReportOption} from './advisor/package-options.js';
 const app=express(), port=Number(process.env.PORT||3100);
 if(!process.env.LOCAL_ACCESS_TOKEN||!process.env.DATABASE_URL) throw new Error('Configure ignored .env first');
 const pool=new pg.Pool({connectionString:process.env.DATABASE_URL,max:5,connectionTimeoutMillis:4000,idleTimeoutMillis:10000});
@@ -94,12 +95,13 @@ app.post('/api/projects/:id/events',async(req,res)=>{
  const p=await owned(req),input=z.object({name:z.enum(['comparison_viewed','checklist_viewed','provider_clicked','feedback_useful','feedback_not_useful']),provider:z.string().regex(/^[a-z0-9-]{1,64}$/).optional()}).parse(req.body);
  if(!p.recommendation)return res.status(409).json({error:'ابتدا مقایسه را بسازید'});
  if(['checklist_viewed','provider_clicked'].includes(input.name)&&(!p.selected||input.provider&&input.provider!==p.selected))return res.status(409).json({error:'ابتدا گزینه را انتخاب کنید'});
- const selected=p.recommendation.schemaVersion===2?[p.recommendation.packageSnapshot,p.recommendation.alternative].find(o=>o?.id===p.selected):p.recommendation.options.find(o=>o.id===p.selected);
+ const selected=findReportOption(p.recommendation,p.selected);
  if(input.name==='provider_clicked'&&!selected)return res.status(409).json({error:'ابتدا مقایسه را با کاتالوگ ایران به‌روز کنید'});
  await event(pool,p.id,input.name,req.session,input.name==='provider_clicked'?(selected.providerId||p.selected):'');res.json({ok:true});
 });
 app.post('/api/projects/:id/select',async(req,res)=>{
- const p=await owned(req),id=z.string().regex(/^[a-z0-9-]{1,64}$/).parse(req.body.id),o=p.recommendation?.schemaVersion===2?[p.recommendation.packageSnapshot,p.recommendation.alternative].find(x=>x?.id===id):p.recommendation?.options.find(x=>x.id===id);
+ const p=await owned(req),id=z.string().regex(/^[a-z0-9-]{1,64}$/).parse(req.body.id),o=findReportOption(p.recommendation,id);
+ if(req.body.reportId&&req.body.reportId!==p.recommendation?.reportId)return res.status(409).json({error:'گزارش تازه‌تری ساخته شده است؛ پروژه را دوباره باز کنید.'});
  if(!o||o.status==='ineligible')return res.status(409).json({error:'این گزینه شرایط لازم را ندارد'});
  const db=await pool.connect();try{await db.query('BEGIN');await db.query('UPDATE app.projects SET selected=$1 WHERE id=$2',[id,p.id]);await event(db,p.id,'plan_selected',req.session,o.providerId||id);await db.query('COMMIT');res.json({option:o,confirmedEligible:o.status==='eligible'});}catch(e){await db.query('ROLLBACK');throw e;}finally{db.release();}
 });

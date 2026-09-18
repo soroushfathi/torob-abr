@@ -1,5 +1,6 @@
 import {budgetBand,assessBudget,hasOperationsCapability} from './requirements.js';
 export function attachMeteredPackage(report,input,estimate) {
+ report.serverOptions=[];
  const container=input.pricingPreference==='arvan-container',model=container?'container':'IaaS';
  const capable=hasOperationsCapability(input);
  const high=input.availability==='critical'||input.scale==='large';
@@ -42,6 +43,7 @@ export function attachMeteredPackage(report,input,estimate) {
  // Keep only one meaningful managed alternative when the explicit metered option needs operations support.
  report.alternative=!capable&&prior.model==='PaaS'?{...prior,id:'package-managed-alternative'}:null;
  report.packageSnapshot.providerId='arvan';
+ delete report.packageSnapshot.serverChoice;
  report.packageSnapshot.budgetStatus=budgetStatus;
  report.packageSnapshot.decisions.push(...componentDecisions,{id:'BUDGET-001',inputs:{budgetBand:band,knownMonthly,usageDays:estimate.configuration.usageDays},result:budgetStatus,reason:'فقط بازهٔ صریح ۳۰روزه با سقف بازهٔ بودجهٔ ماهانه مقایسه می‌شود؛ جمع هزینه کامل نیست.',assumptions:['۱۰ میلیون به بالا سقف مشخص ندارد و بودجهٔ نامحدود فرض نمی‌شود.']});
  report.model=report.packageSnapshot.title;report.status=report.packageSnapshot.status;report.assumptions=report.packageSnapshot.assumptions;report.unknowns=report.packageSnapshot.unknowns;

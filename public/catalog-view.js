@@ -14,7 +14,7 @@ export function renderCatalog(root, r, {onSelect, onRefresh, currentVersion}) {
       <span class="eyebrow">انتخاب زیرساخت / ۰۲ · فقط میزبانی ایران</span>
       <h2>${esc(r.model)}</h2><p>${esc(r.explanation)}</p>
       <div class="catalog-stats"><div><strong>${n(providers.length)}</strong><span>ارائه‌دهنده بررسی‌شده</span></div><div><strong>${n(r.options.length)}</strong><span>پلن و سبد دارای قیمت</span></div><div><strong>${n(priced)}</strong><span>ارائه‌دهنده با قیمت قابل مقایسه</span></div></div>
-      <p class="catalog-date">بررسی منابع: <bdi>${esc(r.catalogSnapshot.retrievedAt)}</bdi> · قیمت خرید لحظه‌ای نیست · منابع هر ردیف در دسترس‌اند</p>
+      <p class="catalog-date">آخرین به‌روزرسانی کاتالوگ: <bdi>${esc(r.catalogSnapshot.retrievedAt)}</bdi> · قیمت خرید لحظه‌ای نیست · منابع هر ردیف در دسترس‌اند</p>
       <p class="callout">${esc(r.unknowns.join(' · '))}</p>
       <details><summary>مبنای هزینه و فرض‌های این مقایسه</summary><ul>${r.assumptions.map(t=>`<li>${esc(t)}</li>`).join('')}</ul><p>جمع پایهٔ PaaS شامل برنامه، دیتابیس و فایل است. جمع پایهٔ IaaS شامل سرور مشترک است؛ فضای مستقل تصاویر و بکاپ اضافه نشده‌اند. ظرفیت و سطح مدیریت این دو یکسان نیست.</p></details>
       <p>${r.budget===null?'سقف بودجهٔ عددی مشخص نشده است.':`بودجهٔ ماهانه: ${money(r.budget)}؛ قرار گرفتن قیمت پایه زیر بودجه به معنی کفایت بودجهٔ نهایی نیست.`}</p>

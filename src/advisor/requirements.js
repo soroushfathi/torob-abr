@@ -24,7 +24,7 @@ export const requirementsSchema=z.object({
  supportLevel:z.string().max(80).default('none'),supportHours:quantity,supportPeople:quantity,supportBilling:choice(['once','recurring'])
 });
 export function hasOperationsCapability(r) {
- return r.operationsCapability!==undefined?r.operationsCapability==='yes':r.devops==='yes'&&r.serverMaintenance==='yes'&&r.databaseMaintenance==='yes';
+ return r.operationsCapability!==undefined?r.operationsCapability==='yes':r.devops==='yes'&&r.serverMaintenance!=='no'&&r.databaseMaintenance!=='no';
 }
 const budgetBands={
  'under-2m':{label:'زیر ۲ میلیون تومان',min:0,max:2000000,maxExclusive:true},
@@ -59,5 +59,5 @@ export function parseBudget(text='') {
  const match=normalized.match(/^(\d+(?:\.\d+)?)\s*(میلیون|هزار)?\s*(تومان|ریال)?(?:\s*(?:در ماه|ماهانه))?$/);
  if(!match)return null;
  const value=Number(match[1])*(match[2]==='میلیون'?1e6:match[2]==='هزار'?1000:1)/(match[3]==='ریال'?10:1);
- return Number.isFinite(value)&&value>=0&&value<=1e15&&!String(value).includes('e')?value:null;
+ return Number.isFinite(value)&&value>0&&value<=1e15&&!String(value).includes('e')?value:null;
 }

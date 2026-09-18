@@ -1,67 +1,180 @@
 # Torob Cloud / ترب ابر
 
-Private local prototype with a real remote PostgreSQL database and existing Prometheus/Grafana integrations through **`ssh xdo-new`**. The linked repository was empty when this work began. No application has been deployed publicly and nothing has been pushed to GitHub.
+Torob Cloud is a Persian RTL infrastructure advisor for Iranian cloud services. It turns project requirements into a hosting package with explicit assumptions, pricing evidence, alternatives, and saved recommendation reports.
 
-## Start on this Windows development machine
+The application runs locally on Windows. PostgreSQL, pricing collection, and monitoring support services are reached through a private SSH tunnel.
 
-Prerequisites: Node.js 24+, Python 3, existing SSH alias/key `xdo-new`. Credentials have already been written into the ignored, ACL-restricted `.env`; do not commit or paste it.
+## Presentation and demo
+
+- [Google Slides — project presentation](https://docs.google.com/presentation/d/1Qdq7st7JJJ5rYhiINLabIEpMJjSw3czeBe4WgZ7ECXQ/edit?usp=drive_link)
+- [Demo video — Google Drive](https://drive.google.com/file/d/1v49TlYwVV9WxKCYtOoYjlhXhNiiPBmRr/view?usp=drive_link)
+
+These resources retain their existing Google sharing permissions.
+
+## Product capabilities
+
+- Capture requirements, operational capability, budget range, availability needs, and file-storage requirements.
+- Recommend infrastructure packages with rule identifiers, assumptions, unknown costs, and alternatives.
+- Compare fixed plans and explicit metered configurations while preserving original pricing evidence.
+- Save projects, selections, procurement checklists, and immutable report snapshots.
+- Review pricing collection and publication candidates through a separate administrator role.
+- Inspect read-only incident evidence for database, latency, and resource issues.
+
+The advisor uses deterministic rules. Live AI, commercial conversions, revenue attribution, and measured diagnosis accuracy are unavailable. Verification events remain separate from user activity.
+
+## Architecture
+
+| Component | Implementation |
+| --- | --- |
+| Browser | Static HTML/CSS/JavaScript in `public/`, Persian RTL, self-hosted IRANYekanX |
+| API | Node.js 24+, Express 5, Zod validation; binds to `127.0.0.1:3100` |
+| Advisor | Requirements, rules, package assembly, and option selection in `src/advisor/` |
+| Pricing | Catalog versions, evidence, decimal estimates, and admin routes in `src/pricing/` |
+| Persistence | PostgreSQL `torob_cloud`; separate application, migration, analytics, and pricing roles |
+| Collection | Bounded Python adapters and a dedicated support worker in `infra/pricing/` |
+| Monitoring | Authenticated telemetry gateway, Prometheus, Grafana, and read-only SQL aggregates |
+
+The existing `xdo-new` SSH alias provides these loopback forwards:
+
+| Local endpoint | Remote endpoint | Purpose |
+| --- | --- | --- |
+| `127.0.0.1:15432` | `127.0.0.1:5432` | PostgreSQL |
+| `127.0.0.1:19100` | `127.0.0.1:19100` | Telemetry |
+| `127.0.0.1:13300` | `127.0.0.1:3300` | Grafana |
+
+## Local setup
+
+Prerequisites: Node.js 24+, npm, PowerShell, Python 3 for setup helpers, and authorized SSH access through `xdo-new`. A fresh clone does not provision the remote infrastructure.
 
 ```powershell
 cd D:\Projects\torob-abr
 npm ci
-powershell -ExecutionPolicy Bypass -File scripts/setup-fonts.ps1
-# Terminal 1: keep this running
-powershell -ExecutionPolicy Bypass -File scripts/tunnel.ps1
-# Terminal 2
-npm run migrate
-npm start
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-fonts.ps1
 ```
 
-Open **http://127.0.0.1:3100**. Sign in using `LOCAL_ACCESS_TOKEN` from the private `.env` file. The header provides logout and admin/user mode switching. Enter `ADMIN_ACCESS_TOKEN` to elevate; switching back to user requires no key and removes admin access server-side. Switching mode preserves saved projects in the same session and reloads the page (unsaved form changes are lost). Logout expires the session server-side and clears the cookie. This is an isolated demo-session login: projects belong to the current cookie session (7 days). A new login creates a separate workspace and cannot access the previous session's projects; the logout dialog explains this limitation. This is not a production identity system. Apply migration `005_session_controls.sql` with `npm run migrate` before using these controls.
+The font script copies the user-provided package from `D:\Projects\ForoushYar\IRANYekanX(Pro)`. Font binaries are ignored by Git; no font CDN is used.
 
-The existing tunnel/application may already be running from setup. Do not start duplicate listeners; `ExitOnForwardFailure` will report conflicts. Closing the tunnel disconnects the database; closing the app marks the development machine offline after 90 seconds plus at most one scrape interval.
+Use `.env.example` as the configuration reference. On the existing authorized environment, initialize local credentials with:
 
-For a fresh local checkout with the same authorized SSH alias, run `python scripts/configure-local.py` once to copy **only Torob Cloud's newly created credentials** into a restricted, ignored `.env`. Existing `.env` is never overwritten. Never put secrets in browser source or Git.
+```powershell
+python scripts/configure-local.py
+python scripts/configure-pricing-local.py
+```
 
-## Dashboards (SSH tunnel required)
+The first helper refuses to overwrite an existing `.env`; the pricing helper adds missing pricing settings. Secrets belong in the ignored local `.env` or server-side configuration, never in browser assets or Git. The administrator key must differ from the user key.
 
-Use the existing Grafana administrator account. No existing password was changed, exported to the local project, or printed. The new Torob Cloud folder is admin-only. Existing folders and dashboards retain their permissions.
+Start the tunnel in one terminal and keep it running:
 
-- Folder: http://127.0.0.1:13300/dashboards/f/torob-cloud
-- Technical and AI: http://127.0.0.1:13300/d/torob-technical
-- Product funnel: http://127.0.0.1:13300/d/torob-product
-- Recommendation quality: http://127.0.0.1:13300/d/torob-quality
-- Commercial: http://127.0.0.1:13300/d/torob-commercial
-- SRE: http://127.0.0.1:13300/d/torob-sre
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/tunnel.ps1
+```
 
-Business dashboards default to `source=user`; choose `verification` to inspect the exercised integration journeys. These are real API requests and persisted events, explicitly separated from user activity. All business panels use rolling 30-day SQL windows, independent of the dashboard time picker. See [KPI definitions](docs/kpis.md).
+Start the app in a second terminal:
 
-## Package advisor and pricing collection
+```powershell
+npm run dev
+```
 
-The advisor now produces one selected package and at most one meaningful alternative, with rule IDs, assumptions, explicit unknown costs and immutable report history. Pricing separates `fixed_plan`, `metered`, explicit configurations and exact-decimal estimates. Liara has an SSR adapter; Arvan uses public calculator metadata and explicit configuration quotes. Other providers are registered with unsupported automated extraction status.
+Open [the local application](http://127.0.0.1:3100/). Use `npm start` without file watching. Avoid duplicate listeners; the tunnel exits on forwarding conflicts.
 
-Sign in with the separate `ADMIN_ACCESS_TOKEN` in ignored `.env` for the pricing administration page. Ordinary sessions cannot call `/api/admin/*`. Restart the local app after the new environment settings are added. The bounded pricing worker runs independently on `xdo-new`, daily at 03:15 UTC; no application is deployed there. See [the package/pricing runbook](docs/pricing-packages.md) for rules, adapter coverage, limitations and installation details. Dashboard: http://127.0.0.1:13300/d/torob-pricing.
+### Schema updates
 
-## What is implemented
+Inspect pending migrations and back up the dedicated database following the [operations runbook](docs/operations.md), then apply:
 
-- Persian RTL local UI: requirements, conservative provider comparison, saved projects, provisional selection, procurement checklist, analytics and real read-only incident investigations.
-- Dedicated PostgreSQL DB, separate migration/app/analytics roles, checksummed transactional migrations, durable events, deduplication and ownership checks.
-- Private authenticated telemetry ingress; read-only SQL business aggregates; restricted Prometheus queries for local latency/errors, process CPU/memory and DB health.
-- Reproducible Grafana dashboards and scoped scrape job; offline handling; daily backups with a verified disposable restore.
-- Saved, hashed sandbox deployment plans and Compose artifacts. **No deployment/remediation executor is enabled.**
+```powershell
+npm run migrate
+```
 
-## Validation policy
+The runner verifies recorded SHA-256 checksums, serializes execution with an advisory lock, and applies each pending migration in a transaction. Never edit an already-applied migration.
 
-**All tests are paused by the user: do not write or run unit, integration, E2E, browser journey tests or `npm run verify`.** Product acceptance belongs to the user. Earlier verification records are historical, not validation of this change. Essential syntax/configuration review and public provider source inspection remain allowed.
+Migration `006` stores unverified tariff submissions; `007` exposes the restricted public view needed by the catalog. A successful database connectivity check does not prove that all required schema objects exist.
 
-Fonts are self-hosted IRANYekanX WOFF2 (Regular, Medium, DemiBold, Bold, ExtraBold) copied from the user-provided `D:\Projects\ForoushYar\IRANYekanX(Pro)` package. Font binaries are local/ignored; `scripts/setup-fonts.ps1` reproduces the copy. No external font CDN is used. English technical identifiers retain Latin numerals and code uses a monospace font.
+## Configuration
 
-## Current limits
+| Variable | Purpose |
+| --- | --- |
+| `PORT` | Local HTTP port, default `3100` |
+| `DATABASE_URL` | Application PostgreSQL connection |
+| `MIGRATION_DATABASE_URL` | Schema-owner connection for migrations |
+| `PRICING_ADMIN_DATABASE_URL` | Restricted pricing administrator connection |
+| `LOCAL_ACCESS_TOKEN` | Demo user sign-in key |
+| `ADMIN_ACCESS_TOKEN` | Separate administrator sign-in/elevation key |
+| `TELEMETRY_URL` | Required private endpoint `http://127.0.0.1:19100` |
+| `TELEMETRY_TOKEN` | Telemetry authentication secret |
+| `GRAFANA_URL` | Forwarded Grafana address |
+| `AI_MODE` | Current configuration uses `rules` |
 
-- This is the initial integration built from an empty repository, not completion of every feature in the original broad product brief. The advisor uses deterministic package rules; live AI, AI accuracy evaluation, alert webhook ingestion, full-market pricing adapters, fully verified cost scenarios, and deployment/remediation execution are not implemented.
-- The Iranian catalog contains 17 provider records and 21 priced plans/baskets from 5 providers, reviewed on 2026-09-16. Official prices, original currency, separate cost components, stock/starting-price distinctions, and source links are visible. Other providers retain explicit research status instead of invented prices. See [catalog sources and refresh procedure](docs/catalog.md). These are partial monthly costs, not final purchase quotes; capacity and unknown extras still require confirmation. No fully confirmed purchase eligibility is claimed.
-- AI uses no external credential. Sales conversions, attributed revenue, labeled diagnosis accuracy and production MTTR are unavailable. Existing Loki/Alloy were discovered; no Torob application-log integration is configured yet.
-- Local Docker is absent. `infra/sandbox/compose.yml` is a bounded reference artifact only. Its image has not been pulled or run here. The application cannot execute arbitrary shell or access a Docker socket.
-- Backups are currently on the same server, not off-site; host loss is not covered. The last scoped inspection found about 9 GB free server disk space. Existing PostgreSQL and observability are shared; the new namespaces/roles do not create resource-level fault isolation for the shared DB engine.
+## Sessions and API
 
-Public deployment is a separate future task requiring production authentication, HTTPS, a complete product acceptance review, and a reviewed execution plan.
+Sign-in creates a seven-day HttpOnly cookie session. Projects belong to that session: a new login creates a separate workspace. Switching user/admin mode preserves projects in the current session but reloads the page, discarding unsaved form changes. Logout expires the session without deleting records. This is a demo identity model, not production account management.
+
+| Endpoint | Responsibility |
+| --- | --- |
+| `GET /api/health` | Database connectivity and latest telemetry status |
+| `POST /api/session` | Demo sign-in |
+| `POST /api/session/role` | Change role; elevation requires the admin key |
+| `POST /api/session/logout` | Expire the session |
+| `GET /api/catalog` | Read catalog and pricing evidence |
+| `GET, POST /api/projects` | List or create owned projects |
+| `POST /api/projects/:id/recommend` | Generate and persist a report |
+| `GET /api/projects/:id/reports` | List historical reports |
+| `POST /api/projects/:id/select` | Select a report option |
+| `GET /api/analytics` | Session-owned event aggregates |
+| `GET, POST /api/incidents` | Read or request bounded investigations |
+
+Protected routes require a valid session and enforce ownership. Routes under `/api/admin/*` additionally require the admin role. Full route definitions and validation schemas are in `src/server.js` and `src/pricing/admin.js`.
+
+## Pricing semantics
+
+Fixed plans, metered tariffs, explicit configurations, and estimates are separate concepts. Calculations preserve original currencies and use decimal arithmetic. Missing rates are not zero; budget ranges are not converted to invented midpoints. A known subtotal below a budget does not prove affordability of the complete package.
+
+Published versions and report snapshots preserve historical evidence. User-submitted, unverified tariffs stay separate from verified publication. Failed collection retains the previous version and its real age. See the [pricing runbook](docs/pricing-packages.md), [catalog reference](docs/catalog.md), and [Parspack evidence](docs/parspack-price-verification.md) for coverage and limitations.
+
+## Health and troubleshooting
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:3100/api/health
+```
+
+Expected healthy values: `status: ok`, `database: connected`, and `telemetry: connected`. Telemetry is periodic and may briefly be pending at startup.
+
+| Symptom | Check |
+| --- | --- |
+| Local page unreachable | App process and port `3100` |
+| Health returns `503` | SSH terminal, authorized connectivity, and listener `15432` |
+| Health OK but catalog fails | Migration history, schema objects, and access grants; especially migration `007` |
+| Generic service error | This message covers server errors generally; it does not establish a tunnel failure |
+| Admin controls unavailable | Separate admin configuration and current session role |
+| Previous projects missing after login | New sign-in creates a new session workspace |
+
+Closing the tunnel disconnects database and monitoring access. Stopping the app makes telemetry stale; offline does not mean healthy.
+
+## Monitoring and recovery
+
+The [Grafana folder](http://127.0.0.1:13300/dashboards/f/torob-cloud) is available through the tunnel with the existing authorized Grafana account. Dashboards cover technical signals, product events, recommendation quality, commercial availability, SRE evidence, and pricing collection.
+
+Business panels default to `source=user` and use rolling 30-day SQL windows. Historical verification uses `source=verification`. See [KPI definitions](docs/kpis.md).
+
+Backups target only `torob_cloud`, use PostgreSQL custom-format dumps, and retain seven copies on the same server. Archive validation is not a restore test. Recovery procedures and historical restore evidence are in the [operations runbook](docs/operations.md). Off-site backup and point-in-time recovery are not configured.
+
+## Repository guide
+
+| Path | Contents |
+| --- | --- |
+| `public/` | Browser interface and ignored local fonts |
+| `src/server.js` | HTTP API, sessions, ownership, telemetry |
+| `src/advisor/` | Requirements and package recommendation logic |
+| `src/pricing/` | Catalog, estimates, pricing evidence, administration |
+| `migrations/` | Ordered PostgreSQL migrations |
+| `infra/` | Monitoring, worker, backup, and sandbox artifacts |
+| `scripts/` | Setup, tunnel, migration, and operations utilities |
+| `docs/` | Runbooks, pricing evidence, KPI definitions |
+| `test/` | Existing test sources; execution policy below applies |
+
+## Validation policy and current limits
+
+Product tests are paused under the recorded project policy. Do not run unit, integration, E2E, browser journeys, or `npm run verify` without renewed authorization. Syntax checks and essential configuration review remain available. Historical verification is not acceptance of the current revision.
+
+There is no production identity system, full-market pricing coverage, live AI diagnosis, or enabled deployment/remediation executor. Sandbox Compose files and saved plans are reference artifacts. The app cannot execute arbitrary shell commands or access a Docker socket. Database roles do not provide resource isolation from other users of shared PostgreSQL infrastructure.
+
+Public application deployment requires a separate reviewed plan, production authentication, HTTPS, and product acceptance. Current application development stays local.

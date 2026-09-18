@@ -8,7 +8,8 @@ export function registerPricingAdmin(app,adminPool) {
   const runs=(await adminPool.query('SELECT id,provider_id,trigger,started_at,finished_at,created_at,status,stages,error_code,error_message,parser_version,extracted_count,changed_count,duration_seconds,extraction_config,review_reasons FROM pricing.runs ORDER BY created_at DESC LIMIT 100')).rows;
   const candidates=(await adminPool.query("SELECT id,provider_id,base_version,verified_at,parser_version,run_id FROM pricing.versions WHERE status='candidate' ORDER BY created_at DESC LIMIT 30")).rows;
   const estimates=(await adminPool.query("SELECT id,tariff_version,configuration,status,created_at,result-'evidence' AS result FROM pricing.estimates ORDER BY created_at DESC LIMIT 30")).rows;
-  res.json({sources,runs,candidates,estimates,schedule:'روزانه ۰۳:۱۵ UTC؛ worker مستقل از رایانهٔ توسعه',retention:'شاهد خام: ۳۰ روز و سقف مجموع ۱۰۰MiB؛ هش و تاریخچه باقی می‌مانند.'});
+  const unverifiedSubmissions=(await adminPool.query('SELECT id,provider_id,service,source_url,reported_by,source_access_status,verification_status,received_at,verified_at,data FROM pricing.unverified_tariff_submissions ORDER BY received_at DESC LIMIT 30')).rows;
+  res.json({sources,runs,candidates,estimates,unverifiedSubmissions,schedule:'روزانه ۰۳:۱۵ UTC؛ worker مستقل از رایانهٔ توسعه',retention:'شاهد خام: ۳۰ روز و سقف مجموع ۱۰۰MiB؛ هش و تاریخچه باقی می‌مانند.'});
  });
  app.get('/api/admin/pricing/runs/:id',async(req,res)=>{
   const id=z.uuid().parse(req.params.id),run=(await adminPool.query('SELECT * FROM pricing.runs WHERE id=$1',[id])).rows[0];
@@ -17,14 +18,14 @@ export function registerPricingAdmin(app,adminPool) {
  });
  app.post('/api/admin/pricing/sources/:id',async(req,res)=>{
   const id=providerId.parse(req.params.id),input=z.object({enabled:z.boolean()}).strict().parse(req.body);
-  const result=await adminPool.query("UPDATE pricing.sources SET enabled=$1,next_run=CASE WHEN $1 AND next_run IS NULL THEN date_trunc('day',now() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'+interval '1 day 3 hours 15 minutes' ELSE next_run END WHERE id=$2 AND adapter IN ('liara','arvan') RETURNING id,enabled",[input.enabled,id]);
+  const result=await adminPool.query("UPDATE pricing.sources SET enabled=$1,next_run=CASE WHEN $1 AND next_run IS NULL THEN date_trunc('day',now() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'+interval '1 day 3 hours 15 minutes' ELSE next_run END WHERE id=$2 AND adapter IN ('liara','arvan','parsvds') RETURNING id,enabled",[input.enabled,id]);
   if(!result.rowCount)return res.status(409).json({error:'adapter این منبع پیاده‌سازی نشده است.'});res.json(result.rows[0]);
  });
  app.post('/api/admin/pricing/sources/:id/run',async(req,res)=>{
   const id=providerId.parse(req.params.id),db=await adminPool.connect();
   try{
    await db.query('BEGIN');const s=(await db.query('SELECT * FROM pricing.sources WHERE id=$1 FOR UPDATE',[id])).rows[0];
-   if(!s?.enabled||!['liara','arvan'].includes(s.adapter))throw Object.assign(new Error('منبع فعال یا پشتیبانی‌شده نیست.'),{status:409});
+   if(!s?.enabled||!['liara','arvan','parsvds'].includes(s.adapter))throw Object.assign(new Error('منبع فعال یا پشتیبانی‌شده نیست.'),{status:409});
    const allowed=(await db.query("SELECT NOT EXISTS(SELECT 1 FROM pricing.runs WHERE provider_id=$1 AND (status IN ('queued','running') OR created_at>now()-interval '10 minutes')) AND NOT EXISTS(SELECT 1 FROM pricing.runs WHERE requested_by=$2 AND created_at>now()-interval '1 minute') AS ok",[id,req.session.id])).rows[0].ok;
    if(!allowed)throw Object.assign(new Error('اجرا در صف است یا محدودیت نرخ فعال است؛ بعداً تلاش کنید.'),{status:429});
    const runId=randomUUID();await db.query("INSERT INTO pricing.runs(id,provider_id,trigger,requested_by) VALUES($1,$2,'manual',$3)",[runId,id,req.session.id]);await db.query('UPDATE pricing.sources SET last_manual=now() WHERE id=$1',[id]);await db.query('COMMIT');res.status(202).json({id:runId,status:'queued'});

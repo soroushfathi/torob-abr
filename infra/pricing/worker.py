@@ -3,7 +3,7 @@ import datetime as dt, hashlib, json, pathlib, time, uuid, urllib.request, urlli
 from decimal import Decimal
 import psycopg
 from psycopg.types.json import Jsonb
-from adapters import liara, arvan
+from adapters import liara, arvan, parsvds
 ROOT=pathlib.Path('/opt/torob-cloud/pricing')
 MAX_BYTES=6*1024*1024
 STOP=False
@@ -15,7 +15,7 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self,*args,**kwargs): return None
 def fetch(url):
     # Both allowlist and redirect policy are enforced here, regardless of DB contents.
-    if url not in {liara.URL,arvan.SETTINGS}: raise ValueError('source_not_allowlisted')
+    if url not in {liara.URL,arvan.SETTINGS,parsvds.URL}: raise ValueError('source_not_allowlisted')
     for attempt in range(3):
         try:
             request=urllib.request.Request(url,headers={'User-Agent':'TorobCloud-Pricing/1.0','Accept':'text/html,application/json','Accept-Encoding':'identity'})
@@ -48,7 +48,7 @@ def changes(old,new):
     if before and removed/len(before)>.20: reasons.append('حذف گستردهٔ بیش از ۲۰ درصد منابع')
     return diff,sorted(set(reasons))
 def process(conn,run):
-    run_id,provider=run;adapter={'liara':liara,'arvan':arvan}.get(provider);started=time.monotonic();stages={k:'pending' for k in ['fetch','evidence','extraction','normalization','validation','publication']}
+    run_id,provider=run;adapter={'liara':liara,'arvan':arvan,'parsvds':parsvds}.get(provider);started=time.monotonic();stages={k:'pending' for k in ['fetch','evidence','extraction','normalization','validation','publication']}
     with conn.transaction():
         conn.execute("UPDATE pricing.runs SET status='running',started_at=now() WHERE id=%s",(run_id,))
         conn.execute('UPDATE pricing.sources SET last_attempt=now(),next_run=%s WHERE id=%s',(next_daily(),provider))
@@ -56,12 +56,12 @@ def process(conn,run):
         conn.execute("UPDATE pricing.runs SET status='unsupported',finished_at=now(),error_message='adapter استخراج قیمت پیاده‌سازی نشده است' WHERE id=%s",(run_id,));return
     parser=adapter.PARSER_VERSION;conn.execute('UPDATE pricing.runs SET parser_version=%s WHERE id=%s',(parser,run_id))
     try:
-        url=adapter.URL if provider=='liara' else adapter.SETTINGS
+        url=adapter.SETTINGS if provider=='arvan' else adapter.URL
         body,status,ctype=fetch(url);at=utc();evidence_id=str(uuid.uuid4());stages['fetch']='success' if status==200 else 'failed'
         conn.execute('INSERT INTO pricing.evidence(id,run_id,url,retrieved_at,http_status,sha256,body,bytes,content_type,expires_at) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',(evidence_id,run_id,url,at,status,hashlib.sha256(body).hexdigest(),body,len(body),ctype,at+dt.timedelta(days=30)))
         stages['evidence']='stored'
         if status!=200: raise ValueError('access_challenge' if status in {401,403} else f'http_{status}')
-        if provider=='liara' and 'html' not in ctype or provider=='arvan' and 'json' not in ctype: raise ValueError('unexpected_content_type')
+        if provider!='arvan' and 'html' not in ctype or provider=='arvan' and 'json' not in ctype: raise ValueError('unexpected_content_type')
         stages['extraction']='running';plans,config=adapter.parse(body,at.isoformat(),evidence_id)
         stages['extraction']='success' if provider=='liara' else 'metadata_only';stages['normalization']='success'
         if not plans or len(plans)>500 or len({p['id'] for p in plans})!=len(plans): raise ValueError('invalid_plan_count')
@@ -69,7 +69,7 @@ def process(conn,run):
             if p['pricingModel']=='fixed_plan' and (p.get('monthly') is None or not 0<Decimal(str(p['monthly']))<Decimal('100000000000')): raise ValueError('invalid_fixed_price')
         previous=conn.execute("SELECT id,plans FROM pricing.versions WHERE provider_id=%s AND status='published' ORDER BY published_at DESC,id DESC LIMIT 1",(provider,)).fetchone()
         diff,reasons=changes(previous[1] if previous else [],plans);review=bool(reasons)
-        stages['validation']='review' if review else 'valid';stages['publication']='held' if review else ('published' if provider=='liara' else 'metadata_published')
+        stages['validation']='review' if review else 'valid';stages['publication']='held' if review else ('metadata_published' if provider=='arvan' else 'published')
         version=str(uuid.uuid4())
         for p in plans:p['versionId']=version
         with conn.transaction():

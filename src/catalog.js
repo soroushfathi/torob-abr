@@ -1,4 +1,6 @@
 // Reviewed public-source snapshot. Prices are evidence, not live purchase quotes.
+import {parspackOfficialPricing} from './pricing/parspack-official.js';
+import {arvanStorageOfficial} from './pricing/arvan-storage-official.js';
 const checkedAt = '2026-09-16';
 const provider = (id, name, source, services, note, priceStatus = 'pending') =>
   ({ id, name, country: 'Iran', source, services, note, priceStatus, checkedAt });
@@ -8,8 +10,9 @@ export const providers = [
   provider('iranserver','ایران‌سرور','https://www.iranserver.com/vps/iran/','سرور ابری و VPS ایران','پلن‌های کاربرد عمومی NGP؛ ۱۰۰۰ گیگابایت ترافیک درج‌شده.','priced'),
   provider('mobinhost','مبین‌هاست','https://www.mobinhost.com/','VPS ایران','فقط پلن‌های ایران؛ پلن ۲ گیگابایت ناموجود اعلام شده است.','priced'),
   provider('mizbancloud','میزبان‌کلاد','https://mizbancloud.com/server','سرور · CDN · ذخیره‌سازی','قیمت‌های «شروع از»؛ منابع پیش‌فرض ماشین‌حساب با دیسک SAS.','starting'),
-  provider('parspack','پارس‌پک','https://parspack.com/cloud-server','سرور ابری · PaaS · ذخیره‌سازی','ماشین‌حساب: روزانه ۳۱٬۴۹۶ تومان؛ برای ۳۰ روز ۹۴۴٬۸۸۰ تومان. منطقهٔ این عدد مشخص نیست؛ تا تأیید ایران وارد رتبه‌بندی نمی‌شود.','partial'),
-  provider('arvan','ابر آروان','https://www.arvancloud.ir/fa/pricing/iaas','سرور · کانتینر · ذخیره‌سازی · CDN','صفحهٔ تعرفه در بررسی با چالش دسترسی پاسخ داد؛ قیمت عددی تأیید نشده است.'),
+  {...provider('parsvds','پارس‌وی‌دی‌اس','https://parsvds.com/virtual-server/iran-ssd/','VPS ایران · VPS خارج · سرور اختصاصی ایران','۱۱ پلن VPS ایران با قیمت پایهٔ ماهانه؛ کد NEWIR و ترافیک اضافه جدا از جمع پایه‌اند. قیمت سبد سفارش پیش از خرید بررسی شود.','priced'),checkedAt:'2026-09-18'},
+  {...provider('parspack','پارس‌پک','https://parspack.com/cloud-server','سرور ابری · PaaS · ذخیره‌سازی','نرخ روزانهٔ ۸ موقعیت، ۴ دیتاسنتر ایران و ۳ پیکربندی نمونه در محاسبه‌گر رسمی تأیید شده است؛ برآورد ۳۰روزه تعرفهٔ ماهانه نیست.','priced'),checkedAt:'2026-09-18'},
+  provider('arvan','ابر آروان','https://www.arvancloud.ir/fa/pricing/iaas','سرور · کانتینر · ذخیره‌سازی · CDN','قیمت پایهٔ بسته‌های فضای ابری در صفحهٔ محصول ثبت شده؛ نرخ‌های مازاد و قیمت نهایی پیکربندی ناموجود است.','partial'),
   provider('hamravesh','هم‌روش / دارکوب','https://hamravesh.com/darkube','PaaS · Kubernetes · دیتابیس','صفحهٔ عمومی قابلیت‌ها را دارد؛ تعرفهٔ عددی در محتوای دریافت‌شده نبود.'),
   provider('derak','ابر دراک','https://derak.cloud/pricing/cloud-server/','سرور · VPS · CDN','API رسمی، پلن تهران استاندارد ۲GB/۲ هسته را ماهانه ۹۹۰٬۰۰۰ تومان نشان می‌دهد؛ خرید اولیه ناموجود و نمایش در صفحه غیرفعال است. به گزینه‌های قابل خرید اضافه نشده است.','partial'),
   provider('abalon','آبالون / ابر زس','https://abalon.cloud/vps','سرور ابری','عدد نمایشی ۲٬۸۰۷٬۷۷۰ تومان برای ۴ هسته، ۸GB رم و ۵۰GB دیسک؛ دورهٔ صورتحساب و منطقه کنار عدد روشن نیست. ابر زس دوباره شمرده نشده است.','partial'),
@@ -56,6 +59,25 @@ server('mobinhost','iran-6','ایران ۶GB',995000,6,3,50,{trafficGB:100});
 server('mizbancloud','economy','اقتصادی · SAS',765872,2,1,25,{priceKind:'starting_at'});
 server('mizbancloud','business','تجاری · SAS',1451744,4,2,50,{priceKind:'starting_at'});
 server('mizbancloud','professional','حرفه‌ای · SAS',2823488,8,4,100,{priceKind:'starting_at'});
+// Official Iran VPS page checked 2026-09-18. Promotion is not applied to base prices.
+for (const [slug,plan,amount,ram,cpu,disk,trafficGB,diskType] of [
+  ['e2','IR_VPS_e2',465000,1,1,20,100,'NVMe'],
+  ['01','IR_VPS_01',639000,2,1,20,150,'NVMe'],
+  ['02','IR_VPS_02',696000,3,1,25,200,'NVMe'],
+  ['gh','IR_VPS_GH',717000,4,2,20,300,'SSD'],
+  ['03','IR_VPS_03',798000,4,2,30,300,'NVMe'],
+  ['04','IR_VPS_04',1159000,6,2,50,400,'NVMe'],
+  ['05','IR_VPS_05',1559000,10,4,80,500,'NVMe'],
+  ['06','IR_VPS_06',2820000,16,6,120,700,'NVMe'],
+  ['07','IR_VPS_07',3999000,32,8,160,1000,'NVMe'],
+  ['08','IR_VPS_08',6120000,48,10,280,2500,'NVMe'],
+  ['09','IR_VPS_09',8100000,64,12,400,4000,'NVMe'],
+]) server('parsvds',slug,plan,amount,ram,cpu,disk,{
+  trafficGB,diskType,retrievedAt:'2026-09-18',
+  trafficAddon:{quantityGB:100,amount:49000,currency:'IRT'},
+  promotion:{code:'NEWIR',discountPercent:20,minPeriodMonths:1,applied:false},
+  unknowns:['بکاپ مستقل، ترافیک مازاد و مالیات در جمع پایه نیست','کد تخفیف، موجودی و قیمت نهایی سبد سفارش پیش از خرید بررسی شود'],
+});
 for (const [slug, plan, appPrice, ram, cpu, disk] of [
   ['mars','مریخ',950000,1,1,10], ['jupiter','مشتری',1650000,2,1,20], ['saturn','زحل',2950000,4,2,40]
 ]) {
@@ -70,6 +92,6 @@ for (const [slug, plan, appPrice, ram, cpu, disk] of [
     responsibility:'زیرساخت با ارائه‌دهنده؛ امنیت برنامه، سیاست نگهداری و آزمون بازیابی با تیم شماست.',
     unknowns:['ترافیک، بکاپ موردنیاز و مالیات در جمع پایه نیست','ظرفیت DB و فضای تصاویر فرض اولیه است؛ با دادهٔ واقعی بررسی شود']});
 }
-export const catalog = {version:'2026-09-16.3',retrievedAt:checkedAt,retrievalPrecision:'day',
-  scope:'Iranian providers, Iranian hosting only',providers,offers,
-  coverageNote:'۱۷ ارائه‌دهنده بررسی شده‌اند؛ این فهرست ادعای پوشش همهٔ بازار ندارد. فقط پلن‌های دارای قیمت و محل ایران وارد مقایسه می‌شوند.'};
+export const catalog = {version:'2026-09-18.4',retrievedAt:'2026-09-18',retrievalPrecision:'day',
+  scope:'Iranian providers, Iranian hosting only',providers,offers,verifiedIaaSPricing:[parspackOfficialPricing],verifiedStoragePricing:[arvanStorageOfficial],
+  coverageNote:'۱۸ ارائه‌دهنده بررسی شده‌اند؛ این فهرست ادعای پوشش همهٔ بازار ندارد. فقط پلن‌های دارای قیمت و محل ایران وارد مقایسه می‌شوند.'};

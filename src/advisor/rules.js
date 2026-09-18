@@ -1,5 +1,5 @@
 import {numberInput,parseBudget,budgetBand,hasOperationsCapability} from './requirements.js';
-export const RULES_VERSION='packages-1.1.0';
+export const RULES_VERSION='packages-1.2.0';
 export function decide(r, override) {
  const decisions=[];
  const record=(id,keys,result,reason,assumptions=[])=>{decisions.push({id,inputs:Object.fromEntries(keys.map(k=>[k,r[k]??'unknown'])),result,reason,assumptions});return result;};
@@ -7,7 +7,7 @@ export function decide(r, override) {
  const budget=r.budgetRange===undefined?parseBudget(r.budget):null,band=budgetBand(r), high=r.availability==='critical'||r.scale==='large';
  const teamKeys=r.operationsCapability===undefined?['devops','serverMaintenance','databaseMaintenance']:['operationsCapability'];
  const model=record('RUN-001',[...teamKeys,'budgetRange','budget','availability','scale'],override||(capable&&!high?'IaaS':'PaaS'),
-  override?'جایگزین مدیریت‌شده برای کاهش عملیات تیم.':capable&&!high?'تیم توان نگهداری را تأیید کرده؛ تجمیع می‌تواند خرید سرویس‌های جدا را کاهش دهد. اجارهٔ ماهانهٔ ماشین حذف نمی‌شود.':'با توان عملیات نامشخص یا محدود، PaaS ترجیح دارد. دسترس‌پذیری حساس نیاز به معماری چندنمونه‌ای دارد.',
+  override?'جایگزین مدیریت‌شده برای کاهش عملیات تیم.':capable&&!high?'توان DevOps اعلام شده است؛ اجرای برنامه و دیتابیس روی یک VM نقطهٔ شروع کم‌هزینه است. مسئولیت نگهداری دیتابیس و بازیابی باید به همان تیم سپرده شود. اجارهٔ VM حذف نمی‌شود.':high?'دسترس‌پذیری حساس یا مقیاس بزرگ به طراحی چندنمونه‌ای نیاز دارد؛ بستهٔ تک‌ماشین توصیه نمی‌شود.':'توان نگهداری سرور و دیتابیس تأیید نشده است؛ PaaS و دیتابیس مدیریت‌شده فعلاً ترجیح دارند.',
   ['PaaS امنیت برنامه، دسترسی‌ها و سیاست بازیابی را از مسئولیت تیم خارج نمی‌کند.']);
  const shared=record('DB-001',['database',...teamKeys,'availability'],model==='IaaS'&&!high,'در IaaS کم‌هزینه، دیتابیس روی ماشین مشترک با مسئولیت تیم است؛ در PaaS دیتابیس مستقل مدیریت‌شده ترجیح دارد.',['ماشین مشترک منابع و نقطهٔ خرابی مشترک دارد؛ بکاپ باید خارج از ماشین باشد.']);
  const git=record('GIT-001',['gitPrivate','gitSelfHost','gitControl'],r.gitSelfHost==='yes'||['restricted','full'].includes(r.gitControl)?'self-hosted':'hosted',
